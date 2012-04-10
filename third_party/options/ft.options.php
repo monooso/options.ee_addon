@@ -8,12 +8,22 @@
  * @package         Options
  */
 
+// Thanks to the public $info property, we need to load the config here. Bah.
+require_once dirname(__FILE__) .'/config.php';
+
 class Options_ft extends EE_Fieldtype {
 
-  private $EE;
   private $_ft_model;
 
-  public $info;
+  /**
+   * Stupid EE forces us to do this here, rather than calling the appropriate
+   * model methods from the Constructor.
+   */
+
+  public $info = array(
+    'name'    => OPTIONS_TITLE,
+    'version' => OPTIONS_VERSION
+  );
 
 
   /* --------------------------------------------------------------
@@ -32,18 +42,11 @@ class Options_ft extends EE_Fieldtype {
     $this->EE =& get_instance();
 
     $this->EE->load->add_package_path(PATH_THIRD .'options/');
-
-    // Still need to specify the package...
     $this->EE->lang->loadfile('options_ft', 'options');
 
+    // Load the model.
     $this->EE->load->model('options_fieldtype_model');
     $this->_ft_model = $this->EE->options_fieldtype_model;
-
-    // Set the fieldtype info.
-    $this->info = array(
-      'name'    => $this->_ft_model->get_package_title(),
-      'version' => $this->_ft_model->get_package_version()
-    );
   }
 
 
@@ -82,7 +85,7 @@ class Options_ft extends EE_Fieldtype {
    */
   public function display_global_settings()
   {
-
+    return '<p>Display as...</p><p>Default data source...</p>';
   }
 
 
@@ -107,7 +110,7 @@ class Options_ft extends EE_Fieldtype {
    */
   public function install()
   {
-
+    return array();
   }
 
 
