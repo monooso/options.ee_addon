@@ -8,6 +8,7 @@
  * @package         Options
  */
 
+require_once PATH_FT .'EE_Fieldtype.php';
 require_once PATH_THIRD .'options/ft.options.php';
 require_once PATH_THIRD .'options/models/options_fieldtype_model.php';
 
@@ -41,8 +42,7 @@ class Test_options_ft extends Testee_unit_test_case {
      * can just assign the mock models here.
      */
 
-    $this->EE->options_fieldtype_model
-      = $this->_get_mock('fieldtype_model');
+    $this->EE->options_fieldtype_model = $this->_get_mock('fieldtype_model');
 
     $this->_ft_model  = $this->EE->options_fieldtype_model;
     $this->_subject   = new Options();
