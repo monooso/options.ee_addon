@@ -194,6 +194,44 @@ class Test_options_ft extends Testee_unit_test_case {
   }
 
 
+  public function test__validate__returns_true_if_data_is_string_and_not_null()
+  {
+    $data = 'okay';
+    $this->assertIdentical(TRUE, $this->_subject->validate($data));
+  }
+
+
+  public function test__validate__returns_false_if_data_is_string_and_null()
+  {
+    $data = 'null';
+    $message  = 'Epic Fail!';
+
+    $this->EE->lang->expectOnce('line', array('*'));
+    $this->EE->lang->returns('line', $message);
+
+    $this->assertIdentical($message, $this->_subject->validate($data));
+  }
+
+
+  public function test__validate__returns_true_if_data_is_array_and_does_not_contain_null()
+  {
+    $data = array('okay', 'good', 'valid');
+    $this->assertIdentical(TRUE, $this->_subject->validate($data));
+  }
+  
+  
+  public function test__validate__returns_false_if_data_is_array_and_contains_null()
+  {
+    $data = array('okay', 'null', 'valid');
+    $message  = 'Epic Fail!';
+
+    $this->EE->lang->expectOnce('line', array('*'));
+    $this->EE->lang->returns('line', $message);
+
+    $this->assertIdentical($message, $this->_subject->validate($data));
+  }
+  
+  
 }
 
 
