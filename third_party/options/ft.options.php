@@ -325,6 +325,14 @@ class Options_ft extends EE_Fieldtype {
    */
   public function validate($data)
   {
+    // We only need to check for 'null' data if the field is required.
+    if ( ! array_key_exists('field_required', $this->settings)
+      OR $this->settings['field_required'] == 'n'
+    )
+    {
+      return TRUE;
+    }
+
     if (is_string($data))
     {
       $data = array($data);
