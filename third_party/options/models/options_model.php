@@ -16,6 +16,7 @@ require_once dirname(__FILE__) .'/../libraries/spyc/spyc.php';
 class Options_model extends CI_Model {
 
   protected $EE;
+  protected $_data_sources_table;
   protected $_namespace;
   protected $_package_name;
   protected $_package_title;
@@ -44,6 +45,9 @@ class Options_model extends CI_Model {
     parent::__construct();
 
     $this->EE =& get_instance();
+
+    // Saves hard-coding this everywhere.
+    $this->_data_sources_table = 'options_data_sources';
 
     // Load the OmniLogger class.
     if (file_exists(PATH_THIRD .'omnilog/classes/omnilogger.php'))
@@ -180,7 +184,7 @@ class Options_model extends CI_Model {
 
     $db_sources = $this->EE->db
       ->select(implode(', ', $fields))
-      ->get_where('options_data_sources',
+      ->get_where($this->_data_sources_table,
           array('site_id' => $this->get_site_id()));
 
     if ( ! $db_sources->num_rows())
@@ -398,6 +402,73 @@ class Options_model extends CI_Model {
 
       Omnilogger::log($omnilog_entry);
     }
+  }
+
+
+  /**
+   * Saves the supplied data sources to the database.
+   *
+   * @access  public
+   * @param   array   $data_sources    An array of Options_data_source objects.
+   * @return  void
+   */
+  public function save_global_data_sources(Array $data_sources)
+  {
+    $inserts = $updates = $source_ids = array();
+
+    // Validate the data.
+    foreach ($data_sources AS $data_source)
+    {
+      if ( ! $data_source instanceof Options_data_source)
+      {
+        throw new Exception('Invalid data source.');
+      }
+
+      // @TODO : check the data source properties are populated.
+
+      if ($data_source->id)
+      {
+        $updates[]    = $data_source;
+        $source_ids[] = $data_source->id;
+      }
+      else
+      {
+        $inserts[] = $data_source;
+      }
+    }
+
+    // Delete any obsolete data sources.
+    $this->EE->db
+      ->where('site_id', $this->get_site_id())
+      ->where_not_in('data_source_id', $source_ids)
+      ->delete($this->_data_sources_table);
+
+    // Update any existing data sources.
+    foreach ($updates AS $update)
+    {
+      $update_data = $update->to_array('data_source_');
+      $update_data['site_id'] = $this->get_site_id();
+
+      unset($update_data['data_source_id']);
+
+      $this->EE->db->update($this->_data_sources_table, $update_data,
+        array('data_source_id' => $update->id));
+    }
+
+    // Create any new data sources.
+    $insert_batch_data = array();
+
+    foreach ($inserts AS $insert)
+    {
+      $insert_data = $insert->to_array('data_source_');
+      $insert_data['site_id'] = $this->get_site_id();
+
+      unset($insert_data['data_source_id']);
+
+      $insert_batch_data[] = $insert_data;
+    }
+
+    $this->EE->db->insert_batch($this->_data_sources_table, $insert_batch_data);
   }
 
 

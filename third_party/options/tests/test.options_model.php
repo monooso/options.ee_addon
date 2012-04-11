@@ -164,6 +164,150 @@ class Test_options_model extends Testee_unit_test_case {
   }
 
 
+  public function test__save_global_data_sources__throws_exception_when_encountering_invalid_data_source()
+  {
+    $data_sources = array(new Options_data_source(), new StdClass());
+
+    $this->expectException();
+    $this->_subject->save_global_data_sources($data_sources);
+  }
+
+
+  public function test__save_global_data_sources__deletes_obsolete_data_sources()
+  {
+    $data_sources = array(
+      new Options_data_source(array(
+        'format'    => Options_data_source::FORMAT_YAML,
+        'id'        => '1234',
+        'location'  => '/path/to/file.yml',
+        'title'     => 'Example File',
+        'type'      => Options_data_source::TYPE_FILE
+      )),
+      new Options_data_source(array(
+        'format'    => Options_data_source::FORMAT_YAML,
+        'id'        => '2345',
+        'location'  => 'http://example.com/more-data/',
+        'title'     => 'Another Example URL',
+        'type'      => Options_data_source::TYPE_URL
+      ))
+    );
+
+    $this->EE->db->expectOnce('where', array('site_id', $this->_site_id));
+    $this->EE->db->expectOnce('where_not_in', array('data_source_id',
+      array($data_sources[0]->id, $data_sources[1]->id)));
+
+    $this->EE->db->expectOnce('delete', array('options_data_sources'));
+
+    $this->_subject->save_global_data_sources($data_sources);
+  }
+
+
+  public function test__save_global_data_sources__creates_new_data_sources()
+  {
+    $data_sources = array(
+      new Options_data_source(array(
+        'format'    => Options_data_source::FORMAT_YAML,
+        'id'        => '1234',
+        'location'  => '/path/to/file.yml',
+        'title'     => 'Example File',
+        'type'      => Options_data_source::TYPE_FILE
+      )),
+      new Options_data_source(array(
+        'format'    => Options_data_source::FORMAT_YAML,
+        'location'  => 'http://example.com/data/',
+        'title'     => 'Example URL',
+        'type'      => Options_data_source::TYPE_URL
+      )),
+      new Options_data_source(array(
+        'format'    => Options_data_source::FORMAT_YAML,
+        'location'  => '/path/to/another_file.yml',
+        'title'     => 'Another Example File',
+        'type'      => Options_data_source::TYPE_FILE
+      )),
+      new Options_data_source(array(
+        'format'    => Options_data_source::FORMAT_YAML,
+        'id'        => '2345',
+        'location'  => 'http://example.com/more-data/',
+        'title'     => 'Another Example URL',
+        'type'      => Options_data_source::TYPE_URL
+      ))
+    );
+
+    $insert_data = array(
+      $data_sources[1]->to_array('data_source_'),
+      $data_sources[2]->to_array('data_source_')
+    );
+
+    $insert_data[0]['site_id'] = $this->_site_id;
+    $insert_data[1]['site_id'] = $this->_site_id;
+
+    unset($insert_data[0]['data_source_id']);
+    unset($insert_data[1]['data_source_id']);
+  
+    $this->EE->db->expectOnce('insert_batch',
+      array('options_data_sources', $insert_data));
+
+    $this->_subject->save_global_data_sources($data_sources);
+  }
+  
+
+
+  public function test__save_global_data_sources__updates_existing_data_sources()
+  {
+    $data_sources = array(
+      new Options_data_source(array(
+        'format'    => Options_data_source::FORMAT_YAML,
+        'id'        => '1234',
+        'location'  => '/path/to/file.yml',
+        'title'     => 'Example File',
+        'type'      => Options_data_source::TYPE_FILE
+      )),
+      new Options_data_source(array(
+        'format'    => Options_data_source::FORMAT_YAML,
+        'location'  => 'http://example.com/data/',
+        'title'     => 'Example URL',
+        'type'      => Options_data_source::TYPE_URL
+      )),
+      new Options_data_source(array(
+        'format'    => Options_data_source::FORMAT_YAML,
+        'location'  => '/path/to/another_file.yml',
+        'title'     => 'Another Example File',
+        'type'      => Options_data_source::TYPE_FILE
+      )),
+      new Options_data_source(array(
+        'format'    => Options_data_source::FORMAT_YAML,
+        'id'        => '2345',
+        'location'  => 'http://example.com/more-data/',
+        'title'     => 'Another Example URL',
+        'type'      => Options_data_source::TYPE_URL
+      ))
+    );
+
+    $this->EE->db->expectCallCount('update', 2);
+
+    // Hard-code these, to guard against the errors in the test code.
+    $update_object_a          = $data_sources[0];
+    $update_data_a            = $update_object_a->to_array('data_source_');
+    $update_data_a['site_id'] = $this->_site_id;
+
+    unset($update_data_a['data_source_id']);
+
+    $this->EE->db->expectAt(0, 'update', array('options_data_sources',
+      $update_data_a, array('data_source_id' => $update_object_a->id)));
+
+    $update_object_b          = $data_sources[3];
+    $update_data_b            = $update_object_b->to_array('data_source_');
+    $update_data_b['site_id'] = $this->_site_id;
+
+    unset($update_data_b['data_source_id']);
+
+    $this->EE->db->expectAt(1, 'update', array('options_data_sources',
+      $update_data_b, array('data_source_id' => $update_object_b->id)));
+
+    $this->_subject->save_global_data_sources($data_sources);
+  }
+
+
   public function test__update_array_from_input__ignores_unknown_keys_and_updates_known_keys_and_preserves_unaltered_keys()
   {
     $base_array = array(
