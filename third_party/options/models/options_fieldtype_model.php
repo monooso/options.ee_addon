@@ -10,7 +10,7 @@
 
 require_once dirname(__FILE__) .'/options_model.php';
 
-class Options_extension_model extends Options_model {
+class Options_fieldtype_model extends Options_model {
 
   /* --------------------------------------------------------------
    * PUBLIC METHODS

@@ -8,12 +8,12 @@
  * @package         Options
  */
 
-// Thanks to the public $info property, we need to load the config here. Bah.
 require_once dirname(__FILE__) .'/config.php';
 
 class Options_ft extends EE_Fieldtype {
 
   private $_ft_model;
+  private $_sf_loader;
 
   /**
    * Stupid EE forces us to do this here, rather than calling the appropriate
@@ -42,11 +42,17 @@ class Options_ft extends EE_Fieldtype {
     $this->EE =& get_instance();
 
     $this->EE->load->add_package_path(PATH_THIRD .'options/');
+
+    // Load the language file.
     $this->EE->lang->loadfile('options_ft', 'options');
 
     // Load the model.
     $this->EE->load->model('options_fieldtype_model');
     $this->_ft_model = $this->EE->options_fieldtype_model;
+
+    // Load our libraries and helpers.
+    $this->EE->load->helper('form');
+    $this->EE->load->library('spyc/spyc');
   }
 
 
@@ -72,20 +78,29 @@ class Options_ft extends EE_Fieldtype {
    */
   public function display_field($data = '')
   {
+    $saved      = explode('|', $data);
+    $field_name = $this->settings['field_name'];
+    $options    = Spyc::YAMLLoad($this->settings['options_manual_source']);
 
-  }
+    switch ($this->settings['options_control_type'])
+    {
+      case Control_type::CHECKBOX:
+      case Control_type::RADIO:
+        $output = $this->_display_field_checkboxes_and_radio_buttons(
+          $field_name, $this->settings['options_control_type'], $options,
+          $saved);
+        break;
 
+      case Control_type::MULTI_SELECT:
+        $output = form_multiselect($field_name .'[]', $options, $saved);
+        break;
 
-  /**
-   * Displays the global settings form. The current global settings are
-   * available via the $this->settings property.
-   *
-   * @access public
-   * @return string
-   */
-  public function display_global_settings()
-  {
-    return '<p>Display as...</p><p>Default data source...</p>';
+      case Control_type::SELECT:
+      default:
+        $output = form_dropdown($field_name, $options, $saved);
+    }
+
+    return $output;
   }
 
 
@@ -93,24 +108,34 @@ class Options_ft extends EE_Fieldtype {
    * Displays the fieldtype settings form.
    *
    * @access public
-   * @param  string $settings Previously-saved settings.
+   * @param  array $settings Previously-saved settings.
    * @return string
    */
-  public function display_settings($settings = '')
+  public function display_settings(Array $settings = array())
   {
+    // Satan's little helpers.
+    $this->EE->load->library('table');
 
-  }
+    // Restore any previously-saved data.
+    $current_settings = $this->_ft_model->update_array_from_input(
+      $this->_ft_model->get_default_fieldtype_settings(),
+      $settings
+    );
 
+    // Gather the view data.
+    $view_data = array(
+      'current_settings'      => $current_settings,
+      'options_control_types' => $this->_ft_model->get_control_types(),
+      'options_source_types'  => $this->_ft_model->get_data_source_types()
+    );
 
-  /**
-   * Installs the fieldtype, and sets the default values.
-   *
-   * @access public
-   * @return array
-   */
-  public function install()
-  {
-    return array();
+    /**
+     * Somewhat confusing. We don't need to actually return the view string, or
+     * even echo it out. The view uses the table->add_row method, and that is
+     * apparently enough. Obviously.
+     */
+
+    $this->EE->load->view('settings', $view_data);
   }
 
 
@@ -190,15 +215,15 @@ class Options_ft extends EE_Fieldtype {
 
 
   /**
-   * Prepares the field data for saving to the databasae.
+   * Preps. the field data for saving.
    *
    * @access public
-   * @param  string $data The submitted field data.
-   * @return string The data to save.
+   * @param  mixed $data The submitted field data.
+   * @return string
    */
   public function save($data)
   {
-
+    return is_array($data) ? implode('|', $data) : $data;
   }
 
 
@@ -218,37 +243,15 @@ class Options_ft extends EE_Fieldtype {
    * Saves the fieldtype settings.
    *
    * @access public
-   * @param  string $settings The submitted settings.
-   * @return void
+   * @param  array $settings The submitted settings.
+   * @return array
    */
-  public function save_settings($settings)
+  public function save_settings(Array $settings = array())
   {
-
-  }
-
-
-  /**
-   * Uninstalls the fieldtype.
-   *
-   * @access public
-   * @return void
-   */
-  public function uninstall()
-  {
-
-  }
-
-
-  /**
-   * Validates the submitted field data.
-   *
-   * @access public
-   * @param  string $data The submitted field data.
-   * @return bool
-   */
-  public function validate($data)
-  {
-
+    return $this->_ft_model->update_array_from_input(
+      $this->_ft_model->get_default_fieldtype_settings(),
+      $settings
+    );
   }
 
 
@@ -298,19 +301,6 @@ class Options_ft extends EE_Fieldtype {
 
 
   /**
-   * Performs additional processing after the Low Variable has been saved.
-   *
-   * @access public
-   * @param  string $var_data The submitted Low Variable data.
-   * @return void
-   */
-  public function post_save_var($var_data)
-  {
-
-  }
-
-
-  /**
    * Modifies the Low Variables field data before it is saved to the database.
    *
    * @access public
@@ -340,6 +330,64 @@ class Options_ft extends EE_Fieldtype {
   /* --------------------------------------------------------------
    * MATRIX
    * ------------------------------------------------------------ */
+
+
+  /* --------------------------------------------------------------
+   * PRIVATE METHODS
+   * ------------------------------------------------------------ */
+
+  /**
+   * Constructs the 'display_field' HTML for checkboxes and radio buttons.
+   *
+   * @access private
+   * @param  string $name     The field name.
+   * @param  string $type     The field type (checkbox or radio).
+   * @param  array  $options  An array of options to display.
+   * @param  array  $saved    An array of previously-saved options to restore.
+   * @return string
+   */
+  private function _display_field_checkboxes_and_radio_buttons($name, $type,
+    Array $options, Array $saved
+  )
+  {
+    /**
+     * As this is a private method, and we are inside the circle of trust, no
+     * attempt is made to check that a valid control type has been supplied.
+     */
+
+    if ($type == Control_type::CHECKBOX)
+    {
+      $full_name = $name .'[]';
+      $helper_function = 'form_checkbox';
+    }
+    else
+    {
+      $full_name = $name;
+      $helper_function = 'form_radio';
+    }
+
+    $return = '';
+
+    foreach ($options AS $key => $val)
+    {
+      if (is_array($val))
+      {
+        $return .= form_fieldset($key)
+          .$this->_display_field_checkboxes_and_radio_buttons(
+            $name, $type, $val, $saved)
+          .form_fieldset_close();
+      }
+      else
+      {
+        $return .= '<label>'
+          .$helper_function($full_name, $key, in_array($key, $saved)) .' '
+          .$val .'</label>';
+      }
+    }
+
+    return $return;
+  }
+
 
 
 }

@@ -9,6 +9,7 @@
  */
 
 require_once dirname(__FILE__) .'/../config.php';
+require_once dirname(__FILE__) .'/../classes/control_type.php';
 
 class Options_model extends CI_Model {
 
@@ -71,6 +72,61 @@ class Options_model extends CI_Model {
       $this->EE->session->cache[$this->_namespace]
         [$this->_package_name] = array();
     }
+  }
+
+
+  /**
+   * Returns an associative array of the supported form control types.
+   *
+   * @access public
+   * @return array
+   */
+  public function get_control_types()
+  {
+    $this->EE->lang->loadfile('options_ft', 'options');
+
+    return array(
+      Control_type::SELECT    => lang('options_control_type__select'),
+      Control_type::CHECKBOX  => lang('options_control_type__checkbox'),
+      Control_type::RADIO     => lang('options_control_type__radio'),
+      Control_type::MULTI_SELECT => lang('options_control_type__multi_select')
+    );
+  }
+
+
+  /**
+   * Returns an associative array of the supported data source types.
+   *
+   * @access public
+   * @return array
+   */
+  public function get_data_source_types()
+  {
+    $this->EE->lang->loadfile('options_ft', 'options');
+
+    return array(
+      'manual'  => lang('options_source_type__manual'),
+      'file'    => lang('options_source_type__file'),
+      'url'     => lang('options_source_type__url')
+    );
+  }
+
+
+  /**
+   * Returns an associative array of fieldtype settings.
+   *
+   * @access public
+   * @return array
+   */
+  public function get_default_fieldtype_settings()
+  {
+    return array(
+      'options_control_type'  => 'select',
+      'options_file_source'   => '',
+      'options_manual_source' => '',
+      'options_source_type'   => 'manual',
+      'options_url_source'    => ''
+    );
   }
 
 
@@ -191,6 +247,28 @@ class Options_model extends CI_Model {
 
       Omnilogger::log($omnilog_entry);
     }
+  }
+
+
+  /**
+   * Updates a 'base' array with data contained in an 'update' array. Both
+   * arrays are assumed to be associative.
+   *
+   * - Elements that exist in both the base array and the update array are
+   *   updated to use the 'update' data.
+   * - Elements that exist in the update array but not the base array are
+   *   ignored.
+   * - Elements that exist in the base array but not the update array are
+   *   preserved.
+   *
+   * @access public
+   * @param  array  $base   The 'base' array.
+   * @param  array  $update The 'update' array.
+   * @return array
+   */
+  public function update_array_from_input(Array $base, Array $update)
+  {
+    return array_merge($base, array_intersect_key($update, $base));
   }
 
 

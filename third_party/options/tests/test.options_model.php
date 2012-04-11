@@ -113,6 +113,34 @@ class Test_options_model extends Testee_unit_test_case {
   }
 
 
+  public function test__update_array_from_input__ignores_unknown_keys_and_updates_known_keys_and_preserves_unaltered_keys()
+  {
+    $base_array = array(
+      'first_name'  => 'John',
+      'last_name'   => 'Doe',
+      'gender'      => 'Male',
+      'occupation'  => 'Unknown'
+    );
+
+    $update_array = array(
+      'dob'         => '1941-05-24',
+      'first_name'  => 'Bob',
+      'last_name'   => 'Dylan',
+      'occupation'  => 'Writer'
+    );
+
+    $expected_result = array(
+      'first_name'  => 'Bob',
+      'last_name'   => 'Dylan',
+      'gender'      => 'Male',
+      'occupation'  => 'Writer'
+    );
+
+    $this->assertIdentical($expected_result,
+      $this->_subject->update_array_from_input($base_array, $update_array));
+  }
+
+
 }
 
 
