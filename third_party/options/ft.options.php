@@ -87,7 +87,7 @@ class Options_ft extends EE_Fieldtype {
       OR ! $this->settings['field_name']
       OR ! $this->settings['options_control_type']
       OR ! $this->settings['options_source_type']
-      OR ! is_string($data) OR ! $data
+      OR ! is_string($data)
     )
     {
       return '';
@@ -144,7 +144,21 @@ class Options_ft extends EE_Fieldtype {
 
       case Control_type::SELECT:
       default:
-        $output = form_dropdown($field_name, $options, $data);
+
+        /**
+         * TRICKY:
+         * CodeIgniter tries to be too clever for its own good sometimes. If we 
+         * pass more than one "selected" item to the form_dropdown method, CI 
+         * automatically sets the "multiple" property.
+         *
+         * The only time we'd encounter this problem IRL is if the user switched 
+         * from using a "multiple selection" option (such as checkboxes) to a 
+         * "single selection" option (such as our drop-down). Still, it's 
+         * something we have to deal with.
+         */
+
+        $output = form_dropdown($field_name, $options, $data[0]);
+        break;
     }
 
     return $output;

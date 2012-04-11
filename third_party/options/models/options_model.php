@@ -212,6 +212,8 @@ class Options_model extends CI_Model {
    */
   public function load_options_data_from_file($file)
   {
+    $message = 'Unable to load options data in ' .__CLASS__ .'::' .__METHOD__;
+
     // Works in exactly the same way as loading a string.
     try
     {
@@ -219,8 +221,7 @@ class Options_model extends CI_Model {
     }
     catch (Exception $e)
     {
-      throw new Exception('Unable to load options data in
-        load_options_data_from_file');
+      throw new Exception($message);
     }
   }
 
@@ -234,10 +235,11 @@ class Options_model extends CI_Model {
    */
   public function load_options_data_from_string($input)
   {
+    $message = 'Unable to load options data in ' .__CLASS__ .'::' .__METHOD__;
+
     if ( ! $options = Spyc::YAMLLoad($input))
     {
-      throw new Exception('Unable to load options data in
-        load_options_data_from_string');
+      throw new Exception($message);
     }
 
     return $options;
@@ -253,10 +255,31 @@ class Options_model extends CI_Model {
    */
   public function load_options_data_from_url($url)
   {
+    $message = 'Unable to load options data in ' .__CLASS__ .'::' .__METHOD__;
+
     if ( ! is_string($url) OR ! $url)
     {
-      throw new Exception('Missing or invalid URL passed to
-        load_options_data_from_url');
+      throw new Exception($message);
+    }
+
+    // @TODO: Perform some data cleansing on the URL before passing to 
+    // file_get_contents. Note that we can't simple urlencode it all. Thanks, 
+    // PHP.
+
+    // Let's keep this simple, and avoid cURL for now.
+    if ( ! $input = file_get_contents($url))
+    {
+      throw new Exception($message);
+    }
+
+    // Parse the URL data.
+    try
+    {
+      return $this->load_options_data_from_string($input);
+    }
+    catch (Exception $e)
+    {
+      throw new Exception($message);
     }
   }
 

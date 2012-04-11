@@ -56,11 +56,16 @@ class Test_options_ft extends Testee_unit_test_case {
     $s->settings = array(
       'field_name'            => 'my_lovely_field',
       'options_control_type'  => 'select',
-      'options_manual_source' => 'a',
-      'options_source_type'   => 'manual'
+      'options_source_type'   => 'manual',
+      'options_file_source'   => 'sample.yml',
+      'options_manual_source' => 'manual_source',
+      'options_url_source'    => 'http://myurl.com/sample.yml'
     );
 
-    $this->assertIdentical('', $s->display_field(''));
+    $this->_ft_model->expectNever('load_options_data_from_file');
+    $this->_ft_model->expectNever('load_options_data_from_string');
+    $this->_ft_model->expectNever('load_options_data_from_url');
+
     $this->assertIdentical('', $s->display_field(array()));
     $this->assertIdentical('', $s->display_field(new StdClass()));
   }
@@ -70,9 +75,15 @@ class Test_options_ft extends Testee_unit_test_case {
   {
     $this->_subject->settings = array(
       'options_control_type'  => 'select',
-      'options_manual_source' => 'a',
-      'options_source_type'   => 'manual'
+      'options_source_type'   => 'manual',
+      'options_file_source'   => 'sample.yml',
+      'options_manual_source' => 'manual_source',
+      'options_url_source'    => 'http://myurl.com/sample.yml'
     );
+
+    $this->_ft_model->expectNever('load_options_data_from_file');
+    $this->_ft_model->expectNever('load_options_data_from_string');
+    $this->_ft_model->expectNever('load_options_data_from_url');
 
     $data = 'Saved Data';
 
@@ -85,9 +96,15 @@ class Test_options_ft extends Testee_unit_test_case {
     $this->_subject->settings = array(
       'field_name'            => '',
       'options_control_type'  => 'select',
-      'options_manual_source' => 'a',
-      'options_source_type'   => 'manual'
+      'options_source_type'   => 'manual',
+      'options_file_source'   => 'sample.yml',
+      'options_manual_source' => 'manual_source',
+      'options_url_source'    => 'http://myurl.com/sample.yml'
     );
+
+    $this->_ft_model->expectNever('load_options_data_from_file');
+    $this->_ft_model->expectNever('load_options_data_from_string');
+    $this->_ft_model->expectNever('load_options_data_from_url');
 
     $data = 'Saved Data';
 
@@ -99,9 +116,15 @@ class Test_options_ft extends Testee_unit_test_case {
   {
     $this->_subject->settings = array(
       'field_name'            => 'my_lovely_field',
-      'options_manual_source' => 'a',
-      'options_source_type'   => 'manual'
+      'options_source_type'   => 'manual',
+      'options_file_source'   => 'sample.yml',
+      'options_manual_source' => 'manual_source',
+      'options_url_source'    => 'http://myurl.com/sample.yml'
     );
+
+    $this->_ft_model->expectNever('load_options_data_from_file');
+    $this->_ft_model->expectNever('load_options_data_from_string');
+    $this->_ft_model->expectNever('load_options_data_from_url');
 
     $data = 'Saved Data';
 
@@ -114,9 +137,15 @@ class Test_options_ft extends Testee_unit_test_case {
     $this->_subject->settings = array(
       'field_name'            => 'my_lovely_field',
       'options_control_type'  => '',
-      'options_manual_source' => 'a',
-      'options_source_type'   => 'manual'
+      'options_source_type'   => 'manual',
+      'options_file_source'   => 'sample.yml',
+      'options_manual_source' => 'manual_source',
+      'options_url_source'    => 'http://myurl.com/sample.yml'
     );
+
+    $this->_ft_model->expectNever('load_options_data_from_file');
+    $this->_ft_model->expectNever('load_options_data_from_string');
+    $this->_ft_model->expectNever('load_options_data_from_url');
 
     $data = 'Saved Data';
 
@@ -129,8 +158,14 @@ class Test_options_ft extends Testee_unit_test_case {
     $this->_subject->settings = array(
       'field_name'            => 'my_lovely_field',
       'options_control_type'  => 'select',
-      'options_manual_source' => 'a'
+      'options_file_source'   => 'sample.yml',
+      'options_manual_source' => 'manual_source',
+      'options_url_source'    => 'http://myurl.com/sample.yml'
     );
+
+    $this->_ft_model->expectNever('load_options_data_from_file');
+    $this->_ft_model->expectNever('load_options_data_from_string');
+    $this->_ft_model->expectNever('load_options_data_from_url');
 
     $data = 'Saved Data';
 
@@ -143,9 +178,15 @@ class Test_options_ft extends Testee_unit_test_case {
     $this->_subject->settings = array(
       'field_name'            => 'my_lovely_field',
       'options_control_type'  => 'select',
-      'options_manual_source' => 'a',
-      'options_source_type'   => ''
+      'options_source_type'   => '',
+      'options_file_source'   => 'sample.yml',
+      'options_manual_source' => 'manual_source',
+      'options_url_source'    => 'http://myurl.com/sample.yml'
     );
+
+    $this->_ft_model->expectNever('load_options_data_from_file');
+    $this->_ft_model->expectNever('load_options_data_from_string');
+    $this->_ft_model->expectNever('load_options_data_from_url');
 
     $data = 'Saved Data';
 
