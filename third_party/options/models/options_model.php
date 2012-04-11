@@ -10,6 +10,7 @@
 
 require_once dirname(__FILE__) .'/../config.php';
 require_once dirname(__FILE__) .'/../classes/control_type.php';
+require_once dirname(__FILE__) .'/../libraries/spyc/spyc.php';
 
 class Options_model extends CI_Model {
 
@@ -156,12 +157,8 @@ class Options_model extends CI_Model {
       return URL_THIRD_THEMES .$this->get_package_name() .'/';
     }
 
-    // Old school.
-    $theme_url = $this->EE->config->item('theme_folder_url');
-    $theme_url .= substr($theme_url, -1) == '/'
-      ? 'third_party/' : '/third_party/';
-
-    return $theme_url .$this->get_package_name() .'/';
+    return $this->EE->config->slash_item('theme_folder_url')
+      .'third_party/' .$this->get_package_name() .'/';
   }
 
 
@@ -203,6 +200,64 @@ class Options_model extends CI_Model {
     }
 
     return $this->_site_id;
+  }
+
+
+  /**
+   * Loads the 'options' data from the given file.
+   *
+   * @access  public
+   * @param   string  $file   The file.
+   * @return  array
+   */
+  public function load_options_data_from_file($file)
+  {
+    // Works in exactly the same way as loading a string.
+    try
+    {
+      return $this->load_options_data_from_string($file);
+    }
+    catch (Exception $e)
+    {
+      throw new Exception('Unable to load options data in
+        load_options_data_from_file');
+    }
+  }
+
+
+  /**
+   * Parses the 'options' data from the given string.
+   *
+   * @access  public
+   * @param   string  $input  The data string.
+   * @return  array
+   */
+  public function load_options_data_from_string($input)
+  {
+    if ( ! $options = Spyc::YAMLLoad($input))
+    {
+      throw new Exception('Unable to load options data in
+        load_options_data_from_string');
+    }
+
+    return $options;
+  }
+
+
+  /**
+   * Loads the 'options' data from the given URL.
+   *
+   * @access  public
+   * @param   string  $url  The URL.
+   * @return  array
+   */
+  public function load_options_data_from_url($url)
+  {
+    if ( ! is_string($url) OR ! $url)
+    {
+      throw new Exception('Missing or invalid URL passed to
+        load_options_data_from_url');
+    }
   }
 
 

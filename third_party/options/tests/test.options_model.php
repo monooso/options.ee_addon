@@ -50,7 +50,7 @@ class Test_options_model extends Testee_unit_test_case {
   }
 
 
-  public function test__get_package_theme_url__pre_240_works_with_trailing_slash()
+  public function test__get_package_theme_url__pre_240_works()
   {
     if (defined('URL_THIRD_THEMES'))
     {
@@ -62,27 +62,8 @@ class Test_options_model extends Testee_unit_test_case {
     $theme_url  = 'http://example.com/themes/';
     $full_url   = $theme_url .'third_party/' .$package .'/';
 
-    $this->EE->config->expectOnce('item', array('theme_folder_url'));
-    $this->EE->config->setReturnValue('item', $theme_url);
-
-    $this->assertIdentical($full_url, $this->_subject->get_package_theme_url());
-  }
-
-
-  public function test__get_package_theme_url__pre_240_works_without_trailing_slash()
-  {
-    if (defined('URL_THIRD_THEMES'))
-    {
-      $this->pass();
-      return;
-    }
-
-    $package    = strtolower($this->_package_name);
-    $theme_url  = 'http://example.com/themes';
-    $full_url   = $theme_url .'/third_party/' .$package .'/';
-
-    $this->EE->config->expectOnce('item', array('theme_folder_url'));
-    $this->EE->config->setReturnValue('item', $theme_url);
+    $this->EE->config->expectOnce('slash_item', array('theme_folder_url'));
+    $this->EE->config->setReturnValue('slash_item', $theme_url);
 
     $this->assertIdentical($full_url, $this->_subject->get_package_theme_url());
   }

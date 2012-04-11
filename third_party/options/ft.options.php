@@ -52,7 +52,6 @@ class Options_ft extends EE_Fieldtype {
 
     // Load our libraries and helpers.
     $this->EE->load->helper('form');
-    $this->EE->load->library('spyc/spyc');
   }
 
 
@@ -78,26 +77,74 @@ class Options_ft extends EE_Fieldtype {
    */
   public function display_field($data = '')
   {
-    $saved      = explode('|', $data);
-    $field_name = $this->settings['field_name'];
-    $options    = Spyc::YAMLLoad($this->settings['options_manual_source']);
+    // Do we have the required settings?
+    if ( ! array_key_exists('field_name', $this->settings)
+      OR ! array_key_exists('options_control_type', $this->settings)
+      OR ! array_key_exists('options_source_type', $this->settings)
+      OR ! array_key_exists('options_file_source', $this->settings)
+      OR ! array_key_exists('options_manual_source', $this->settings)
+      OR ! array_key_exists('options_url_source', $this->settings)
+      OR ! $this->settings['field_name']
+      OR ! $this->settings['options_control_type']
+      OR ! $this->settings['options_source_type']
+      OR ! is_string($data) OR ! $data
+    )
+    {
+      return '';
+    }
 
+    $data = explode('|', $data);
+    $field_name = $this->settings['field_name'];
+
+    // Load the data source.
+    try
+    {
+      // @TODO : Use constants for data source types.
+      switch ($this->settings['options_source_type'])
+      {
+        case 'file':
+          $options = $this->_ft_model->load_options_data_from_file(
+            $this->settings['options_file_source']);
+          break;
+
+        case 'manual':
+          $options = $this->_ft_model->load_options_data_from_string(
+            $this->settings['options_manual_source']);
+          break;
+
+        case 'url':
+          $options = $this->_ft_model->load_options_data_from_url(
+            $this->settings['options_url_source']);
+          break;
+
+        default:
+          throw new Exception('Invalid data source');
+          break;
+      }
+    }
+    catch (Exception $e)
+    {
+      // @TODO: Log the error.
+      return '';
+    }
+
+    // Create the form controls.
     switch ($this->settings['options_control_type'])
     {
       case Control_type::CHECKBOX:
       case Control_type::RADIO:
         $output = $this->_display_field_checkboxes_and_radio_buttons(
           $field_name, $this->settings['options_control_type'], $options,
-          $saved);
+          $data);
         break;
 
       case Control_type::MULTI_SELECT:
-        $output = form_multiselect($field_name .'[]', $options, $saved);
+        $output = form_multiselect($field_name .'[]', $options, $data);
         break;
 
       case Control_type::SELECT:
       default:
-        $output = form_dropdown($field_name, $options, $saved);
+        $output = form_dropdown($field_name, $options, $data);
     }
 
     return $output;
