@@ -12,6 +12,8 @@ $lang = array(
   'options_fieldtype_name' => 'Options',
   'options_fieldtype_description' => 'Better options.',
 
+  'error_invalid_selection'   => 'Invalid selection.',
+
   'lbl_options_control_type'  => 'Display Options As',
   'hint_options_control_type' => 'How should we display the available options?',
 

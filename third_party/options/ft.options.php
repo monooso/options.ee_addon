@@ -316,6 +316,41 @@ class Options_ft extends EE_Fieldtype {
   }
 
 
+  /**
+   * Validates the submitted field data.
+   *
+   * @access public
+   * @param  string $data The submitted field data.
+   * @return bool
+   */
+  public function validate($data)
+  {
+    // We only need to check for 'null' data if the field is required.
+    if ( ! array_key_exists('field_required', $this->settings)
+      OR $this->settings['field_required'] == 'n'
+    )
+    {
+      return TRUE;
+    }
+
+    if (is_string($data))
+    {
+      $data = array($data);
+    }
+
+    foreach ($data AS $item)
+    {
+      if (strtolower($item) == 'null')
+      {
+        return $this->EE->lang->line('error_invalid_selection');
+      }
+    }
+
+    return TRUE;
+  }
+
+
+
   /* --------------------------------------------------------------
    * LOW VARIABLES
    * ------------------------------------------------------------ */

@@ -194,6 +194,68 @@ class Test_options_ft extends Testee_unit_test_case {
   }
 
 
+  public function test__validate__returns_true_if_data_is_string_and_not_null()
+  {
+    $this->_subject->settings['field_required'] = 'y';
+
+    $data = 'okay';
+
+    $this->EE->lang->expectNever('line');
+    $this->assertIdentical(TRUE, $this->_subject->validate($data));
+  }
+
+
+  public function test__validate__returns_false_if_data_is_string_and_null()
+  {
+    $this->_subject->settings['field_required'] = 'y';
+
+    $data = 'null';
+    $message  = 'Epic Fail!';
+
+    $this->EE->lang->expectOnce('line', array('*'));
+    $this->EE->lang->returns('line', $message);
+
+    $this->assertIdentical($message, $this->_subject->validate($data));
+  }
+
+
+  public function test__validate__returns_true_if_data_is_array_and_does_not_contain_null()
+  {
+    $this->_subject->settings['field_required'] = 'y';
+
+    $data = array('okay', 'good', 'valid');
+
+    $this->EE->lang->expectNever('line');
+    $this->assertIdentical(TRUE, $this->_subject->validate($data));
+  }
+  
+  
+  public function test__validate__returns_false_if_data_is_array_and_contains_null()
+  {
+    $this->_subject->settings['field_required'] = 'y';
+
+    $data = array('okay', 'null', 'valid');
+    $message  = 'Epic Fail!';
+
+    $this->EE->lang->expectOnce('line', array('*'));
+    $this->EE->lang->returns('line', $message);
+
+    $this->assertIdentical($message, $this->_subject->validate($data));
+  }
+
+
+  public function test__validate__allows_null_if_field_is_not_required()
+  {
+    $this->_subject->settings['field_required'] = 'n';
+
+    $data = 'null';
+
+    $this->EE->lang->expectNever('line');
+    $this->assertIdentical(TRUE, $this->_subject->validate($data));
+  }
+  
+  
+  
 }
 
 
