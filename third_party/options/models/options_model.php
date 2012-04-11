@@ -9,7 +9,8 @@
  */
 
 require_once dirname(__FILE__) .'/../config.php';
-require_once dirname(__FILE__) .'/../classes/control_type.php';
+require_once dirname(__FILE__) .'/../classes/options_control_type.php';
+require_once dirname(__FILE__) .'/../classes/options_data_source.php';
 require_once dirname(__FILE__) .'/../libraries/spyc/spyc.php';
 
 class Options_model extends CI_Model {
@@ -87,10 +88,28 @@ class Options_model extends CI_Model {
     $this->EE->lang->loadfile('options_ft', 'options');
 
     return array(
-      Control_type::SELECT    => lang('options_control_type__select'),
-      Control_type::CHECKBOX  => lang('options_control_type__checkbox'),
-      Control_type::RADIO     => lang('options_control_type__radio'),
-      Control_type::MULTI_SELECT => lang('options_control_type__multi_select')
+      Options_control_type::SELECT => lang('options_control_type__select'),
+      Options_control_type::CHECKBOX => lang('options_control_type__checkbox'),
+      Options_control_type::RADIO => lang('options_control_type__radio'),
+      Options_control_type::MULTI_SELECT
+        => lang('options_control_type__multi_select')
+    );
+  }
+
+
+  /**
+   * Returns an associative array of fieldtype settings.
+   *
+   * @access public
+   * @return array
+   */
+  public function get_default_fieldtype_settings()
+  {
+    return array(
+      'options_control_type'  => 'select',
+      'options_global_source' => '',
+      'options_manual_source' => '',
+      'options_source_type'   => 'manual'
     );
   }
 
@@ -147,19 +166,41 @@ class Options_model extends CI_Model {
 
 
   /**
-   * Returns an associative array of fieldtype settings.
+   * Returns an array of previously-saved 'global' data sources.
    *
-   * @access public
-   * @return array
+   * @access  public
+   * @return  array
    */
-  public function get_default_fieldtype_settings()
+  public function get_global_data_sources()
   {
-    return array(
-      'options_control_type'  => 'select',
-      'options_global_source' => '',
-      'options_manual_source' => '',
-      'options_source_type'   => 'manual'
-    );
+    $sources = array();
+
+    $fields = array('data_source_id', 'data_source_format',
+      'data_source_location', 'data_source_title', 'data_source_type');
+
+    $db_sources = $this->EE->db
+      ->select(implode(', ', $fields))
+      ->get_where('options_data_sources',
+          array('site_id' => $this->get_site_id()));
+
+    if ( ! $db_sources->num_rows())
+    {
+      return $sources;
+    }
+
+    foreach ($db_sources->result_array() AS $db_row)
+    {
+      $temp_data = array();
+
+      foreach ($db_row AS $key => $val)
+      {
+        $temp_data[str_replace('data_source_', '', $key)] = $val;
+      }
+
+      $sources[] = new Options_data_source($temp_data);
+    }
+
+    return $sources;
   }
 
 
