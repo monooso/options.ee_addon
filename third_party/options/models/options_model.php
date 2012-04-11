@@ -96,19 +96,52 @@ class Options_model extends CI_Model {
 
 
   /**
-   * Returns an associative array of the supported data source types.
+   * Returns an associative array of the supported 'field' data source types.
    *
    * @access public
    * @return array
    */
-  public function get_data_source_types()
+  public function get_field_data_source_types()
   {
     $this->EE->lang->loadfile('options_ft', 'options');
 
     return array(
-      'manual'  => lang('options_source_type__manual'),
-      'file'    => lang('options_source_type__file'),
-      'url'     => lang('options_source_type__url')
+      'global'  => lang('data_source_global'),
+      'manual'  => lang('data_source_manual')
+    );
+  }
+
+
+  /**
+   * Returns an associative array of the supported 'global' data source formats.
+   *
+   * @access  public
+   * @return  array
+   */
+  public function get_global_data_source_formats()
+  {
+    $this->EE->lang->loadfile('options_ft', 'options');
+
+    return array(
+      'php_array' => lang('data_format_php_array'),
+      'yaml'      => lang('data_format_yaml')
+    );
+  }
+
+
+  /**
+   * Returns an associative array of the supported 'global' data source types.
+   *
+   * @access  public
+   * @return  array
+   */
+  public function get_global_data_source_types()
+  {
+    $this->EE->lang->loadfile('options_ft', 'options');
+
+    return array(
+      'file'  => lang('data_source_file'),
+      'url'   => lang('data_source_url')
     );
   }
 
@@ -123,10 +156,9 @@ class Options_model extends CI_Model {
   {
     return array(
       'options_control_type'  => 'select',
-      'options_file_source'   => '',
+      'options_global_source' => '',
       'options_manual_source' => '',
-      'options_source_type'   => 'manual',
-      'options_url_source'    => ''
+      'options_source_type'   => 'manual'
     );
   }
 

@@ -14,18 +14,11 @@ $this->table->add_row(
   form_textarea('options_manual_source', $current_settings['options_manual_source'])
 );
 
-// Import from file.
+// Use data source.
 $this->table->add_row(
-  form_label(lang('lbl_options_file_source'), 'options_file_source') .'<br />'
-    .lang('hint_options_file_source'),
-  form_input('options_file_source', $current_settings['options_file_source'])
-);
-
-// Import from URL.
-$this->table->add_row(
-  form_label(lang('lbl_options_url_source'), 'options_url_source') .'<br />'
-    .lang('hint_options_url_source'),
-  form_input('options_url_source', $current_settings['options_url_source'])
+  form_label(lang('lbl_options_global_source'), 'options_global_source') .'<br />'
+    .lang('hint_options_global_source'),
+  form_dropdown('options_global_source', $global_data_sources, $current_settings['options_global_source'])
 );
 
 // Control type.

@@ -80,10 +80,9 @@ class Options_ft extends EE_Fieldtype {
     // Do we have the required settings?
     if ( ! array_key_exists('field_name', $this->settings)
       OR ! array_key_exists('options_control_type', $this->settings)
-      OR ! array_key_exists('options_source_type', $this->settings)
-      OR ! array_key_exists('options_file_source', $this->settings)
+      OR ! array_key_exists('options_global_data_source', $this->settings)
       OR ! array_key_exists('options_manual_source', $this->settings)
-      OR ! array_key_exists('options_url_source', $this->settings)
+      OR ! array_key_exists('options_source_type', $this->settings)
       OR ! $this->settings['field_name']
       OR ! $this->settings['options_control_type']
       OR ! $this->settings['options_source_type']
@@ -102,19 +101,15 @@ class Options_ft extends EE_Fieldtype {
       // @TODO : Use constants for data source types.
       switch ($this->settings['options_source_type'])
       {
-        case 'file':
-          $options = $this->_ft_model->load_options_data_from_file(
-            $this->settings['options_file_source']);
+        case 'global':
+          // Load the global data source details.
+          // Load the global data source data.
+          $options = array();
           break;
 
         case 'manual':
           $options = $this->_ft_model->load_options_data_from_string(
             $this->settings['options_manual_source']);
-          break;
-
-        case 'url':
-          $options = $this->_ft_model->load_options_data_from_url(
-            $this->settings['options_url_source']);
           break;
 
         default:
@@ -166,6 +161,55 @@ class Options_ft extends EE_Fieldtype {
 
 
   /**
+   * Displays the global settings page.
+   *
+   * @access  public
+   * @return  string
+   */
+  public function display_global_settings()
+  {
+    $this->EE->load->library('table');
+
+    // Retrieve the theme URL.
+    $theme_url = $this->_ft_model->get_package_theme_url();
+
+    // Add the JavaScript.
+    $this->EE->cp->add_to_foot('<script type="text/javascript" src="'
+      .$theme_url .'js/libs/jquery.roland.js"></script>');
+
+    $this->EE->cp->add_to_foot('<script type="text/javascript" src="'
+      .$theme_url .'js/common.js"></script>');
+
+    $this->EE->cp->add_to_foot('<script type="text/javascript" src="'
+      .$theme_url .'js/ft.js"></script>');
+
+    $this->EE->javascript->compile();
+
+    // Add the CSS.
+    $this->EE->cp->add_to_head('<link rel="stylesheet" type="text/css" href="'
+      .$theme_url .'css/common.css" />');
+
+    $this->EE->cp->add_to_head('<link rel="stylesheet" type="text/css" href="'
+      .$theme_url .'css/ft.css" />');
+
+    // Retrieve the previously-saved settings.
+    $data_sources = array_key_exists('data_sources', $this->settings)
+      ? $this->settings['data_sources']
+      : array();
+
+    // Prepare the view data.
+    $view_data = array(
+      'data_sources'  => $data_sources,
+      'formats'       => $this->_ft_model->get_global_data_source_formats(),
+      'theme_url'     => $theme_url,
+      'types'         => $this->_ft_model->get_global_data_source_types()
+    );
+
+    return $this->EE->load->view('global_settings', $view_data, TRUE);
+  }
+
+
+  /**
    * Displays the fieldtype settings form.
    *
    * @access public
@@ -174,7 +218,6 @@ class Options_ft extends EE_Fieldtype {
    */
   public function display_settings(Array $settings = array())
   {
-    // Satan's little helpers.
     $this->EE->load->library('table');
 
     // Restore any previously-saved data.
@@ -183,11 +226,24 @@ class Options_ft extends EE_Fieldtype {
       $settings
     );
 
+    // Retrieve the global data sources, and prep. for use in a drop-down.
+    $data_sources = array_key_exists('data_sources', $this->settings)
+      ? $this->settings['data_sources']
+      : array();
+
+    $dd_data_sources = array();
+
+    foreach ($data_sources AS $data_source)
+    {
+      $dd_data_sources[$data_source['name']] = $data_source['name'];
+    }
+
     // Gather the view data.
     $view_data = array(
       'current_settings'      => $current_settings,
+      'global_data_sources'   => $dd_data_sources,
       'options_control_types' => $this->_ft_model->get_control_types(),
-      'options_source_types'  => $this->_ft_model->get_data_source_types()
+      'options_source_types'  => $this->_ft_model->get_field_data_source_types()
     );
 
     /**
@@ -197,6 +253,54 @@ class Options_ft extends EE_Fieldtype {
      */
 
     $this->EE->load->view('settings', $view_data);
+  }
+
+
+  /**
+   * Performs additional fieldtype installation actions.
+   *
+   * @access  public
+   * @return  array
+   */
+  public function install()
+  {
+    $this->EE->load->dbforge();
+
+    $fields = array(
+      'data_source_id' => array(
+        'auto_increment'  => TRUE,
+        'constraint'      => 10,
+        'type'            => 'INT',
+        'unsigned'        => TRUE
+      ),
+      'site_id' => array(
+        'constraint'  => 5,
+        'type'        => 'INT',
+        'unsigned'    => TRUE
+      ),
+      'data_source_format' => array(
+        'constraint'  => 20,
+        'type'        => 'VARCHAR'
+      ),
+      'data_source_location' => array(
+        'constraint'  => 255,
+        'type'        => 'VARCHAR'
+      ),
+      'data_source_title' => array(
+        'constraint'  => 255,
+        'type'        => 'VARCHAR'
+      ),
+      'data_source_type' => array(
+        'constraint'  => 10,
+        'type'        => 'VARCHAR'
+      )
+    );
+
+    $this->EE->dbforge->add_field($fields);
+    $this->EE->dbforge->add_key('data_source_id', TRUE);
+    $this->EE->dbforge->create_table('options_data_sources', TRUE);
+
+    return parent::install();
   }
 
 
@@ -296,7 +400,35 @@ class Options_ft extends EE_Fieldtype {
    */
   public function save_global_settings()
   {
+    $settings = array('data_sources' => array());
 
+    if ( ! $sources = $this->EE->input->post('data_source', TRUE)
+      OR ! is_array($sources)
+    )
+    {
+      return $settings;
+    }
+
+    foreach ($sources AS $source)
+    {
+      if ( ! is_array($source)
+        OR ! array_key_exists('format', $source)
+        OR ! array_key_exists('location', $source)
+        OR ! array_key_exists('name', $source)
+        OR ! array_key_exists('type', $source)
+        OR ! $source['format']
+        OR ! $source['location']
+        OR ! $source['name']
+        OR ! $source['type']
+      )
+      {
+        continue;
+      }
+
+      $settings['data_sources'][] = $source;
+    }
+
+    return $settings;
   }
 
 
@@ -313,6 +445,22 @@ class Options_ft extends EE_Fieldtype {
       $this->_ft_model->get_default_fieldtype_settings(),
       $settings
     );
+  }
+
+
+  /**
+   * Uninstalls the fieldtype.
+   *
+   * @access  public
+   * @return  void
+   */
+  public function uninstall()
+  {
+    // Destroy the database table.
+    $this->EE->load->dbforge();
+    $this->EE->dbforge->drop_table('options_data_sources');
+
+    return parent::uninstall();
   }
 
 

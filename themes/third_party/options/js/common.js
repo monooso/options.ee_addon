@@ -8,7 +8,7 @@
 (function($) {
 
   $(document).ready(function() {
-    console.log('Running the Options package JavaScript.');
+    // console.log('Running the Options package JavaScript.');
   });
 
 })(jQuery);
