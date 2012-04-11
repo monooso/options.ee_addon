@@ -77,7 +77,7 @@ class Options_fieldtype_model extends Options_model {
 
     $this->EE->dbforge->add_field($fields);
     $this->EE->dbforge->add_key('data_source_id', TRUE);
-    $this->EE->dbforge->create_table('options_data_sources', TRUE);
+    $this->EE->dbforge->create_table($this->_data_sources_table, TRUE);
   }
 
 
@@ -90,7 +90,7 @@ class Options_fieldtype_model extends Options_model {
   public function destroy_fieldtype_tables()
   {
     $this->EE->load->dbforge();
-    $this->EE->dbforge->drop_table('options_data_sources');
+    $this->EE->dbforge->drop_table($this->_data_sources_table);
   }
 
 
