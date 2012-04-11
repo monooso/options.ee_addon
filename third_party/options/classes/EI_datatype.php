@@ -134,10 +134,7 @@ class EI_datatype
    */
   public function to_array($prefix = '')
   {
-    $prefix = ($prefix && is_string($prefix))
-      ? rtrim($prefix, ':') .':'
-      : '';
-
+    $prefix = is_string($prefix) ? $prefix : '';
     $return = array();
 
     foreach ($this->_props AS $key => $val)
