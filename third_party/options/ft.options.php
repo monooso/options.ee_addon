@@ -80,7 +80,7 @@ class Options_ft extends EE_Fieldtype {
     // Do we have the required settings?
     if ( ! array_key_exists('field_name', $this->settings)
       OR ! array_key_exists('options_control_type', $this->settings)
-      OR ! array_key_exists('options_global_data_source', $this->settings)
+      OR ! array_key_exists('options_global_source', $this->settings)
       OR ! array_key_exists('options_manual_source', $this->settings)
       OR ! array_key_exists('options_source_type', $this->settings)
       OR ! $this->settings['field_name']
@@ -95,16 +95,40 @@ class Options_ft extends EE_Fieldtype {
     $data = explode('|', $data);
     $field_name = $this->settings['field_name'];
 
-    // Load the data source.
     try
     {
+
       // @TODO : Use constants for data source types.
+
       switch ($this->settings['options_source_type'])
       {
         case 'global':
-          // Load the global data source details.
-          // Load the global data source data.
-          $options = array();
+          $data_source = $this->_ft_model->get_global_data_source_by_id(
+            $this->settings['options_global_source']);
+
+          if ( ! $data_source OR ! $data_source->is_populated())
+          {
+            throw new Exception('Invalid data source in ' .__METHOD__);
+          }
+
+          if ($data_source->type == Options_data_source::TYPE_FILE)
+          {
+            // Load the data from a file.
+            $options = $this->_ft_model->load_options_data_from_file(
+              $data_source->location);
+          }
+          elseif ($data_source->type == Options_data_source::TYPE_URL)
+          {
+            // Load the data from a URL.
+            $options = $this->_ft_model->load_options_data_from_url(
+              $data_source->location);
+          }
+          else
+          {
+            // Express our outrage.
+            throw new Exception('Invalid data source type in ' .__METHOD__);
+          }
+
           break;
 
         case 'manual':
@@ -113,7 +137,7 @@ class Options_ft extends EE_Fieldtype {
           break;
 
         default:
-          throw new Exception('Invalid data source');
+          throw new Exception('Invalid data source in ' .__METHOD__);
           break;
       }
     }
