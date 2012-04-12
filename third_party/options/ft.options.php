@@ -295,51 +295,6 @@ class Options_ft extends EE_Fieldtype {
 
 
   /**
-   * Output the available options as checkboxes.
-   *
-   * @access public
-   * @param  string $data    The saved field data.
-   * @param  array  $params  The tag parameters.
-   * @param  string $tagdata The tag data (for tag pairs).
-   * @return string The modified tagdata.
-   */
-  public function replace_checkbox($data, Array $params = array(), $tagdata = '')
-  {
-
-  }
-
-
-  /**
-   * Output the available options as radio buttons.
-   *
-   * @access public
-   * @param  string $data    The saved field data.
-   * @param  array  $params  The tag parameters.
-   * @param  string $tagdata The tag data (for tag pairs).
-   * @return string The modified tagdata.
-   */
-  public function replace_radio($data, Array $params = array(), $tagdata = '')
-  {
-
-  }
-
-
-  /**
-   * Output the available options as a drop-down list.
-   *
-   * @access public
-   * @param  string $data    The saved field data.
-   * @param  array  $params  The tag parameters.
-   * @param  string $tagdata The tag data (for tag pairs).
-   * @return string The modified tagdata.
-   */
-  public function replace_select($data, Array $params = array(), $tagdata = '')
-  {
-
-  }
-
-
-  /**
    * Preps. the field data for saving.
    *
    * @access public
