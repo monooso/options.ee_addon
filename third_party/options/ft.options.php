@@ -126,18 +126,18 @@ class Options_ft extends EE_Fieldtype {
     // Create the form controls.
     switch ($this->settings['options_control_type'])
     {
-      case Control_type::CHECKBOX:
-      case Control_type::RADIO:
+      case Options_control_type::CHECKBOX:
+      case Options_control_type::RADIO:
         $output = $this->_display_field_checkboxes_and_radio_buttons(
           $field_name, $this->settings['options_control_type'], $options,
           $data);
         break;
 
-      case Control_type::MULTI_SELECT:
+      case Options_control_type::MULTI_SELECT:
         $output = form_multiselect($field_name .'[]', $options, $data);
         break;
 
-      case Control_type::SELECT:
+      case Options_control_type::SELECT:
       default:
 
         /**
@@ -192,14 +192,9 @@ class Options_ft extends EE_Fieldtype {
     $this->EE->cp->add_to_head('<link rel="stylesheet" type="text/css" href="'
       .$theme_url .'css/ft.css" />');
 
-    // Retrieve the previously-saved settings.
-    $data_sources = array_key_exists('data_sources', $this->settings)
-      ? $this->settings['data_sources']
-      : array();
-
     // Prepare the view data.
     $view_data = array(
-      'data_sources'  => $data_sources,
+      'data_sources'  => $this->_ft_model->get_global_data_sources(),
       'formats'       => $this->_ft_model->get_global_data_source_formats(),
       'theme_url'     => $theme_url,
       'types'         => $this->_ft_model->get_global_data_source_types()
@@ -264,42 +259,7 @@ class Options_ft extends EE_Fieldtype {
    */
   public function install()
   {
-    $this->EE->load->dbforge();
-
-    $fields = array(
-      'data_source_id' => array(
-        'auto_increment'  => TRUE,
-        'constraint'      => 10,
-        'type'            => 'INT',
-        'unsigned'        => TRUE
-      ),
-      'site_id' => array(
-        'constraint'  => 5,
-        'type'        => 'INT',
-        'unsigned'    => TRUE
-      ),
-      'data_source_format' => array(
-        'constraint'  => 20,
-        'type'        => 'VARCHAR'
-      ),
-      'data_source_location' => array(
-        'constraint'  => 255,
-        'type'        => 'VARCHAR'
-      ),
-      'data_source_title' => array(
-        'constraint'  => 255,
-        'type'        => 'VARCHAR'
-      ),
-      'data_source_type' => array(
-        'constraint'  => 10,
-        'type'        => 'VARCHAR'
-      )
-    );
-
-    $this->EE->dbforge->add_field($fields);
-    $this->EE->dbforge->add_key('data_source_id', TRUE);
-    $this->EE->dbforge->create_table('options_data_sources', TRUE);
-
+    $this->_ft_model->create_fieldtype_tables();
     return parent::install();
   }
 
@@ -400,35 +360,40 @@ class Options_ft extends EE_Fieldtype {
    */
   public function save_global_settings()
   {
-    $settings = array('data_sources' => array());
+    $data_sources = array();
 
-    if ( ! $sources = $this->EE->input->post('data_source', TRUE)
-      OR ! is_array($sources)
+    if ( ! $post_sources = $this->EE->input->post('data_source', TRUE)
+      OR ! is_array($post_sources)
     )
     {
-      return $settings;
+      // Delete any existing global data sources, and return.
+      $this->_ft_model->delete_global_data_sources();
+      return array();
     }
 
-    foreach ($sources AS $source)
+    foreach ($post_sources AS $post_source)
     {
-      if ( ! is_array($source)
-        OR ! array_key_exists('format', $source)
-        OR ! array_key_exists('location', $source)
-        OR ! array_key_exists('name', $source)
-        OR ! array_key_exists('type', $source)
-        OR ! $source['format']
-        OR ! $source['location']
-        OR ! $source['name']
-        OR ! $source['type']
-      )
+      if ( ! is_array($post_source))
       {
         continue;
       }
 
-      $settings['data_sources'][] = $source;
+      // Manually specify the format, as we currently only support YAML.
+      $post_source['format'] = Options_data_source::FORMAT_YAML;
+
+      $temp_source = new Options_data_source($post_source);
+
+      if ( ! $temp_source->is_populated(FALSE))
+      {
+        continue;
+      }
+
+      $data_sources[] = $temp_source;
     }
 
-    return $settings;
+    // Save the global data, and return.
+    $this->_ft_model->save_global_data_sources($data_sources);
+    return array();
   }
 
 
@@ -456,10 +421,7 @@ class Options_ft extends EE_Fieldtype {
    */
   public function uninstall()
   {
-    // Destroy the database table.
-    $this->EE->load->dbforge();
-    $this->EE->dbforge->drop_table('options_data_sources');
-
+    $this->_ft_model->destroy_fieldtype_tables();
     return parent::uninstall();
   }
 
@@ -599,7 +561,7 @@ class Options_ft extends EE_Fieldtype {
      * attempt is made to check that a valid control type has been supplied.
      */
 
-    if ($type == Control_type::CHECKBOX)
+    if ($type == Options_control_type::CHECKBOX)
     {
       $full_name = $name .'[]';
       $helper_function = 'form_checkbox';

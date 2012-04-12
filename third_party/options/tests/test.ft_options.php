@@ -194,72 +194,33 @@ class Test_options_ft extends Testee_unit_test_case {
   }
 
 
-  public function test__install__creates_the_database_table()
+  public function test__install__calls_model_method_to_create_tables()
   {
-    $this->EE->load->expectOnce('dbforge');
-
-    $fields = array(
-      'data_source_id' => array(
-        'auto_increment'  => TRUE,
-        'constraint'      => 10,
-        'type'            => 'INT',
-        'unsigned'        => TRUE
-      ),
-      'site_id' => array(
-        'constraint'      => 5,
-        'type'            => 'INT',
-        'unsigned'        => TRUE
-      ),
-      'data_source_format' => array(
-        'constraint'  => 20,
-        'type'        => 'VARCHAR'
-      ),
-      'data_source_location' => array(
-        'constraint'  => 255,
-        'type'        => 'VARCHAR'
-      ),
-      'data_source_title' => array(
-        'constraint'  => 255,
-        'type'        => 'VARCHAR'
-      ),
-      'data_source_type' => array(
-        'constraint'  => 10,
-        'type'        => 'VARCHAR'
-      )
-    );
-
-    $this->EE->dbforge->expectOnce('add_field', array($fields));
-    $this->EE->dbforge->expectOnce('add_key', array('data_source_id', TRUE));
-    $this->EE->dbforge->expectOnce('create_table',
-      array('options_data_sources', TRUE));
-  
+    $this->_ft_model->expectOnce('create_fieldtype_tables');
     $this->_subject->install();
   }
-
-
-  public function test__save_global_settings__returns_an_empty_array_of_data_sources_if_none_were_submitted()
-  {
-    $input_sources    = FALSE;
-    $expected_result  = array('data_sources' => array());
-
-    $this->EE->input->expectOnce('post', array('data_source', TRUE));
-    $this->EE->input->returns('post', $input_sources);
   
-    $this->assertIdentical($expected_result,
-      $this->_subject->save_global_settings());
+
+
+  public function test__save_global_settings__deletes_existing_data_sources_and_returns_empty_array_if_no_post_data()
+  {
+    $this->EE->input->returns('post', FALSE, array('data_source', TRUE));
+
+    $this->_ft_model->expectOnce('delete_global_data_sources');
+    $this->_ft_model->expectNever('save_global_data_sources');
+  
+    $this->assertIdentical(array(), $this->_subject->save_global_settings());
   }
 
 
-  public function test__save_global_settings__returns_an_empty_array_of_data_sources_if_post_data_is_not_array()
+  public function test__save_global_settings__deletes_existing_data_sources_and_returns_empty_array_if_post_data_is_not_array()
   {
-    $input_sources    = 'wibble';
-    $expected_result  = array('data_sources' => array());
-
-    $this->EE->input->expectOnce('post', array('data_source', TRUE));
-    $this->EE->input->returns('post', $input_sources);
+    $this->EE->input->returns('post', 'wibble', array('data_source', TRUE));
   
-    $this->assertIdentical($expected_result,
-      $this->_subject->save_global_settings());
+    $this->_ft_model->expectOnce('delete_global_data_sources');
+    $this->_ft_model->expectNever('save_global_data_sources');
+  
+    $this->assertIdentical(array(), $this->_subject->save_global_settings());
   }
 
 
@@ -267,64 +228,50 @@ class Test_options_ft extends Testee_unit_test_case {
   {
     $input_sources = array(
       array(
-        'format'    => '',
-        'location'  => '/path/to/file.yml',
-        'name'      => 'Missing Format',
-        'type'      => 'file'
-      ),
-      array(
-        'format'    => 'yaml',
+        'id'        => '',
         'location'  => '',
-        'name'      => 'Missing Location',
+        'title'     => 'Missing Location',
         'type'      => 'file'
       ),
       array(
-        'format'    => 'yaml',
+        'id'        => '',
         'location'  => 'http://example.com/valid.yml',
-        'name'      => 'Valid',
+        'title'     => 'Valid',
         'type'      => 'url'
       ),
       array(
-        'format'    => 'yaml',
+        'id'        => '123',
         'location'  => 'http://example.com/file.yml',
-        'name'      => '',
+        'title'     => '',
         'type'      => 'url'
       ),
       array(
-        'format'    => 'yaml',
         'location'  => 'http://example.com/file.yml',
-        'name'      => 'Missing Type',
+        'title'     => 'Missing Type',
         'type'      => ''
       )
     );
 
-    $expected_result = array(
-      'data_sources' => array(
-        array(
-          'format'    => 'yaml',
-          'location'  => 'http://example.com/valid.yml',
-          'name'      => 'Valid',
-          'type'      => 'url'
-        )
-      )
-    );
+    $data_sources = array(new Options_data_source($input_sources[1]));
+    $data_sources[0]->format = Options_data_source::FORMAT_YAML;
 
-    $this->EE->input->expectOnce('post', array('data_source', TRUE));
-    $this->EE->input->returns('post', $input_sources);
+    $this->EE->input->returns('post', $input_sources,
+      array('data_source', TRUE));
   
-    $this->assertIdentical($expected_result,
-      $this->_subject->save_global_settings());
+    $this->_ft_model->expectOnce('save_global_data_sources',
+      array($data_sources));
+
+    $this->_ft_model->expectNever('delete_global_data_sources');
+    
+    $this->assertIdentical(array(), $this->_subject->save_global_settings());
   }
 
 
-  public function test__uninstall__drops_database_table()
+  public function test__uninstall__calls_model_method_to_destroy_tables()
   {
-    $this->EE->load->expectOnce('dbforge');
-    $this->EE->dbforge->expectOnce('drop_table', array('options_data_sources'));
-
+    $this->_ft_model->expectOnce('destroy_fieldtype_tables');
     $this->_subject->uninstall();
   }
-  
 
 
   public function test__validate__returns_true_if_data_is_string_and_not_null()
