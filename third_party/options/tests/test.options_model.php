@@ -48,6 +48,80 @@ class Test_options_model extends Testee_unit_test_case {
   }
 
 
+  public function test__get_global_data_source_by_id__queries_database_and_returns_data_source_object()
+  {
+    $id = 10;
+    $db_result = $this->_get_mock('db_query');
+
+    $db_row = array(
+      'data_source_id'        => strval($id),
+      'data_source_format'    => Options_data_source::FORMAT_YAML,
+      'data_source_location'  => '/path/to/file.yml',
+      'data_source_title'     => 'Example File',
+      'data_source_type'      => Options_data_source::TYPE_FILE
+    );
+
+    $expected_result = new Options_data_source(array(
+      'id'        => $db_row['data_source_id'],
+      'format'    => $db_row['data_source_format'],
+      'location'  => $db_row['data_source_location'],
+      'title'     => $db_row['data_source_title'],
+      'type'      => $db_row['data_source_type']
+    ));
+
+    $fields = array('data_source_id', 'data_source_format',
+      'data_source_location', 'data_source_title', 'data_source_type');
+
+    $this->EE->db->expectOnce('select', array(implode(', ', $fields)));
+    $this->EE->db->expectOnce('get_where', array('options_data_sources',
+      array('data_source_id' => $id), 1));
+
+    $this->EE->db->returnsByReference('get_where', $db_result);
+
+    $db_result->expectOnce('num_rows');
+    $db_result->returns('num_rows', 1);
+
+    $db_result->expectOnce('row_array');
+    $db_result->returns('row_array', $db_row);
+  
+    $this->assertIdentical($expected_result,
+      $this->_subject->get_global_data_source_by_id($id));
+  }
+
+
+  public function test__get_global_data_source_by_id__queries_database_and_returns_false_if_no_matching_records()
+  {
+    $id = 10;
+    $db_result = $this->_get_mock('db_query');
+
+    $this->EE->db->expectOnce('select');
+    $this->EE->db->expectOnce('get_where');
+    $this->EE->db->returnsByReference('get_where', $db_result);
+
+    $db_result->expectOnce('num_rows');
+    $db_result->returns('num_rows', 0);
+
+    $db_result->expectNever('row_array');
+  
+    $this->assertIdentical(FALSE,
+      $this->_subject->get_global_data_source_by_id($id));
+  }
+
+
+  public function test__get_global_data_source_by_id__does_not_query_database_and_throws_exception_if_passed_an_invalid_id()
+  {
+    $this->EE->db->expectNever('select');
+    $this->EE->db->expectNever('get_where');
+
+    $this->expectException();
+    $this->_subject->get_global_data_source_by_id(0);
+    $this->_subject->get_global_data_source_by_id('wibble');
+    $this->_subject->get_global_data_source_by_id(array());
+    $this->_subject->get_global_data_source_by_id(new StdClass());
+  }
+  
+
+
   public function test__get_global_data_sources__queries_database_and_returns_array_of_data_source_objects()
   {
     $db_result = $this->_get_mock('db_query');
@@ -104,7 +178,6 @@ class Test_options_model extends Testee_unit_test_case {
     $this->assertIdentical($expected_result,
       $this->_subject->get_global_data_sources());
   }
-  
 
 
   public function test__get_global_data_sources__returns_an_empty_array_if_no_data_sources_exist()

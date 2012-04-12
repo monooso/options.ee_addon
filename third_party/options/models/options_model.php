@@ -182,6 +182,34 @@ class Options_model extends CI_Model {
 
 
   /**
+   * Returns a global data source object with the given ID, or FALSE.
+   *
+   * @access  public
+   * @param   int|string    $id    The ID.
+   * @return  Options_data_source|FALSE
+   */
+  public function get_global_data_source_by_id($id)
+  {
+    if ( ! valid_int($id, 1))
+    {
+      throw new Exception('Invalid ID passed to ' .__METHOD__);
+    }
+
+    $fields = array('data_source_id', 'data_source_format',
+      'data_source_location', 'data_source_title', 'data_source_type');
+
+    $db_source = $this->EE->db
+      ->select(implode(', ', $fields))
+      ->get_where($this->_data_sources_table,
+          array('data_source_id' => $id), 1);
+
+    return $db_source->num_rows()
+      ? $this->_convert_db_row_to_data_source_object($db_source->row_array())
+      : FALSE;
+  }
+
+
+  /**
    * Returns an array of previously-saved 'global' data sources.
    *
    * @access  public
@@ -206,14 +234,7 @@ class Options_model extends CI_Model {
 
     foreach ($db_sources->result_array() AS $db_row)
     {
-      $temp_data = array();
-
-      foreach ($db_row AS $key => $val)
-      {
-        $temp_data[str_replace('data_source_', '', $key)] = $val;
-      }
-
-      $sources[] = new Options_data_source($temp_data);
+      $sources[] = $this->_convert_db_row_to_data_source_object($db_row);
     }
 
     return $sources;
@@ -523,9 +544,31 @@ class Options_model extends CI_Model {
   }
 
 
+
   /* --------------------------------------------------------------
    * PRIVATE METHODS
    * ------------------------------------------------------------ */
+
+  /**
+   * Converts the given database row array to a Options_data_source object.
+   *
+   * @access  private
+   * @param   array    $db_row    The DB row, or equivalent associative array.
+   * @return  Options_data_source
+   */
+  private function _convert_db_row_to_data_source_object(Array $db_row)
+  {
+    // Note: we don't attempt anything in the way of validation.
+    $init_data = array();
+
+    foreach ($db_row AS $key => $val)
+    {
+      $init_data[str_replace('data_source_', '', $key)] = $val;
+    }
+
+    return new Options_data_source($init_data);
+  }
+
 
   /**
    * Returns a references to the package cache. Should be called
