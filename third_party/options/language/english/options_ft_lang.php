@@ -43,7 +43,7 @@ $lang = array(
 
   'thd_data_source_format'    => 'Data Format',
   'thd_data_source_location'  => 'File Path or URL',
-  'thd_data_source_name'      => 'Name',
+  'thd_data_source_title'     => 'Title',
   'thd_data_source_type'      => 'Source Type',
 
   // All done.
