@@ -7,9 +7,9 @@
 
 (function($) {
 
-  $(document).ready(function() {
-    console.log('Running the Options Fieldtype JavaScript.');
-  });
+	$(document).ready(function() {
+		$('.roland').roland();
+	});
 
 })(jQuery);
 
