@@ -82,6 +82,18 @@ class Options_model extends CI_Model {
 
 
   /**
+   * Deletes all the global data sources for the current site.
+   *
+   * @access  public
+   * @return  void
+   */
+  public function delete_global_data_sources()
+  {
+    
+  }
+
+
+  /**
    * Returns an associative array of the supported form control types.
    *
    * @access public
@@ -438,37 +450,54 @@ class Options_model extends CI_Model {
     }
 
     // Delete any obsolete data sources.
-    $this->EE->db
-      ->where('site_id', $this->get_site_id())
-      ->where_not_in('data_source_id', $source_ids)
-      ->delete($this->_data_sources_table);
+    $this->EE->db->where('site_id', $this->get_site_id());
+
+    if ($source_ids)
+    {
+      $this->EE->db->where_not_in('data_source_id', $source_ids);
+    }
+
+    $this->EE->db->delete($this->_data_sources_table);
+
+    // Do we have any more work to do?
+    if ( ! $inserts && ! $updates)
+    {
+      return;
+    }
 
     // Update any existing data sources.
-    foreach ($updates AS $update)
+    if ($updates)
     {
-      $update_data = $update->to_array('data_source_');
-      $update_data['site_id'] = $this->get_site_id();
+      foreach ($updates AS $update)
+      {
+        $update_data = $update->to_array('data_source_');
+        $update_data['site_id'] = $this->get_site_id();
 
-      unset($update_data['data_source_id']);
+        unset($update_data['data_source_id']);
 
-      $this->EE->db->update($this->_data_sources_table, $update_data,
-        array('data_source_id' => $update->id));
+        $this->EE->db->update($this->_data_sources_table, $update_data,
+          array('data_source_id' => $update->id));
+      }
     }
 
     // Create any new data sources.
-    $insert_batch_data = array();
-
-    foreach ($inserts AS $insert)
+    if ($inserts)
     {
-      $insert_data = $insert->to_array('data_source_');
-      $insert_data['site_id'] = $this->get_site_id();
+      $insert_batch_data = array();
 
-      unset($insert_data['data_source_id']);
+      foreach ($inserts AS $insert)
+      {
+        $insert_data = $insert->to_array('data_source_');
+        $insert_data['site_id'] = $this->get_site_id();
 
-      $insert_batch_data[] = $insert_data;
+        unset($insert_data['data_source_id']);
+
+        $insert_batch_data[] = $insert_data;
+      }
+
+      $this->EE->db->insert_batch($this->_data_sources_table,
+        $insert_batch_data);
     }
-
-    $this->EE->db->insert_batch($this->_data_sources_table, $insert_batch_data);
   }
 
 
