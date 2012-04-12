@@ -324,7 +324,19 @@ class Options_model extends CI_Model {
   {
     $message = 'Unable to load options data in ' .__CLASS__ .'::' .__METHOD__;
 
-    // Works in exactly the same way as loading a string.
+    /**
+     * In terms of the YAML library being used, this works in exactly the same
+     * way as loading a string. This isn't as convenient as it sounds, because 
+     * if the file cannot be found, the library just uses the filename as the 
+     * data source. Not desired behaviour at all, so we do a 'file exists' check 
+     * before handing over processing.
+     */
+
+    if ( ! is_file($file))
+    {
+      throw new Exception($message);
+    }
+
     try
     {
       return $this->load_options_data_from_string($file);
