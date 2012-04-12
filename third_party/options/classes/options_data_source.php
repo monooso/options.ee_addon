@@ -78,6 +78,23 @@ class Options_data_source extends EI_datatype
 
 
   /**
+   * Determines whether the instance is populated.
+   *
+   * @access  public
+   * @param   bool  $require_id   Is the 'id' property required?
+   * @return  bool
+   */
+  public function is_populated($require_id = TRUE)
+  {
+    return $this->format
+      && $this->location
+      && $this->type
+      && $this->title
+      && ($require_id === FALSE ? TRUE : $this->id);
+  }
+
+
+  /**
    * Resets the instance properties.
    *
    * @access  public
@@ -86,7 +103,7 @@ class Options_data_source extends EI_datatype
   public function reset()
   {
     $this->_props = array(
-      'format'    => self::FORMAT_YAML,
+      'format'    => '',
       'location'  => '',
       'type'      => '',
       'title'     => '',
