@@ -222,15 +222,12 @@ class Options_ft extends EE_Fieldtype {
     );
 
     // Retrieve the global data sources, and prep. for use in a drop-down.
-    $data_sources = array_key_exists('data_sources', $this->settings)
-      ? $this->settings['data_sources']
-      : array();
-
-    $dd_data_sources = array();
+    $data_sources     = $this->_ft_model->get_global_data_sources();
+    $dd_data_sources  = array();
 
     foreach ($data_sources AS $data_source)
     {
-      $dd_data_sources[$data_source['name']] = $data_source['name'];
+      $dd_data_sources[$data_source->id] = $data_source->title;
     }
 
     // Gather the view data.
