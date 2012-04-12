@@ -194,6 +194,86 @@ class Test_options_ft extends Testee_unit_test_case {
   }
 
 
+  public function test__install__calls_model_method_to_create_tables()
+  {
+    $this->_ft_model->expectOnce('create_fieldtype_tables');
+    $this->_subject->install();
+  }
+  
+
+
+  public function test__save_global_settings__deletes_existing_data_sources_and_returns_empty_array_if_no_post_data()
+  {
+    $this->EE->input->returns('post', FALSE, array('data_source', TRUE));
+
+    $this->_ft_model->expectOnce('delete_global_data_sources');
+    $this->_ft_model->expectNever('save_global_data_sources');
+  
+    $this->assertIdentical(array(), $this->_subject->save_global_settings());
+  }
+
+
+  public function test__save_global_settings__deletes_existing_data_sources_and_returns_empty_array_if_post_data_is_not_array()
+  {
+    $this->EE->input->returns('post', 'wibble', array('data_source', TRUE));
+  
+    $this->_ft_model->expectOnce('delete_global_data_sources');
+    $this->_ft_model->expectNever('save_global_data_sources');
+  
+    $this->assertIdentical(array(), $this->_subject->save_global_settings());
+  }
+
+
+  public function test__save_global_settings__ignores_data_sources_with_missing_data()
+  {
+    $input_sources = array(
+      array(
+        'id'        => '',
+        'location'  => '',
+        'title'     => 'Missing Location',
+        'type'      => 'file'
+      ),
+      array(
+        'id'        => '',
+        'location'  => 'http://example.com/valid.yml',
+        'title'     => 'Valid',
+        'type'      => 'url'
+      ),
+      array(
+        'id'        => '123',
+        'location'  => 'http://example.com/file.yml',
+        'title'     => '',
+        'type'      => 'url'
+      ),
+      array(
+        'location'  => 'http://example.com/file.yml',
+        'title'     => 'Missing Type',
+        'type'      => ''
+      )
+    );
+
+    $data_sources = array(new Options_data_source($input_sources[1]));
+    $data_sources[0]->format = Options_data_source::FORMAT_YAML;
+
+    $this->EE->input->returns('post', $input_sources,
+      array('data_source', TRUE));
+  
+    $this->_ft_model->expectOnce('save_global_data_sources',
+      array($data_sources));
+
+    $this->_ft_model->expectNever('delete_global_data_sources');
+    
+    $this->assertIdentical(array(), $this->_subject->save_global_settings());
+  }
+
+
+  public function test__uninstall__calls_model_method_to_destroy_tables()
+  {
+    $this->_ft_model->expectOnce('destroy_fieldtype_tables');
+    $this->_subject->uninstall();
+  }
+
+
   public function test__validate__returns_true_if_data_is_string_and_not_null()
   {
     $this->_subject->settings['field_required'] = 'y';

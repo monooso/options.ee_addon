@@ -8,7 +8,7 @@
  * @package         Options
  */
 
-class Control_type {
+class Options_control_type {
 
   const CHECKBOX      = 'checkbox';
   const MULTI_SELECT  = 'multi_select';
@@ -18,5 +18,5 @@ class Control_type {
 }
 
 
-/* End of file      : ft.options.php */
-/* File location    : third_party/options/ft.options.php */
+/* End of file      : options_control_type.php */
+/* File location    : third_party/options/options_control_type.php */
