@@ -86,13 +86,12 @@ class Options_ft extends EE_Fieldtype {
       OR ! $this->settings['field_name']
       OR ! $this->settings['options_control_type']
       OR ! $this->settings['options_source_type']
-      OR ! is_string($data)
     )
     {
       return '';
     }
 
-    $data = explode('|', $data);
+    $data = is_string($data) ? explode('|', $data) : array();
     $field_name = $this->settings['field_name'];
 
     try
@@ -176,6 +175,7 @@ class Options_ft extends EE_Fieldtype {
          * something we have to deal with.
          */
 
+        $data   = $data ? $data[0] : $data;
         $output = form_dropdown($field_name, $options, $data[0]);
         break;
     }
