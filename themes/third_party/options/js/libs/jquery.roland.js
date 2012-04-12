@@ -1,8 +1,8 @@
 /**
  * Add and delete 'rows' to any container element.
  *
- * @author			Stephen Lewis
- * @package			Crumbly
+ * @author      Stephen Lewis
+ * @package     Options
  */
 
 (function($) {
@@ -35,6 +35,7 @@
                             break;
 
                         case 'email':
+                        case 'hidden':
                         case 'password':
                         case 'search':
                         case 'text':
@@ -105,28 +106,28 @@
      * -----------------------------------------*/
 
     // Updates the indexes of any form elements.
-	function updateIndexes($container, opts) {
-		$container.find('.' + opts.rowClass).each(function(rowCount) {
-			regex = /^([a-z_]+)\[(?:[0-9]+)\]\[([a-z_]+)\]$/;
+  function updateIndexes($container, opts) {
+    $container.find('.' + opts.rowClass).each(function(rowCount) {
+      regex = /^([a-z_]+)\[(?:[0-9]+)\]\[([a-z_]+)\]$/;
 
-			$(this).find('input, select, textarea').each(function(fieldCount) {
-				fieldName	= $(this).attr('name');
-				fieldName	= fieldName.replace(regex, '$1[' + rowCount + '][$2]');
-				$(this).attr('name', fieldName);
-			});
+      $(this).find('input, select, textarea').each(function(fieldCount) {
+        fieldName = $(this).attr('name');
+        fieldName = fieldName.replace(regex, '$1[' + rowCount + '][$2]');
+        $(this).attr('name', fieldName);
+      });
 
-		});
-	};
+    });
+  };
 
     // Updates the navigation buttons.
-	function updateNav($container, opts) {
-		$remove = $container.find('.' + opts.removeRowClass);
-		$rows	= $container.find('.' + opts.rowClass);
+  function updateNav($container, opts) {
+    $remove = $container.find('.' + opts.removeRowClass);
+    $rows = $container.find('.' + opts.rowClass);
         $rows.size() == 1 ? $remove.hide() : $remove.show();
-	};
+  };
 
 })(jQuery);
 
 
 /* End of file      : jquery.roland.js */
-/* File location    : themes/third_party/crumbly/js/libs/jquery.roland.js */
+/* File location    : themes/third_party/options/js/libs/jquery.roland.js */
