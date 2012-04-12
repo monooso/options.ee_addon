@@ -296,12 +296,70 @@ class Options_ft extends EE_Fieldtype {
    */
   public function pre_process($data)
   {
+    if (is_array($data))
+    {
+      $data = array_shift($data);
+    }
 
+    try
+    {
+
+      // @TODO : Use constants for data source types.
+      // @TODO : Refactor this method and display_field.
+
+      switch ($this->settings['options_source_type'])
+      {
+        case 'global':
+          $data_source = $this->_ft_model->get_global_data_source_by_id(
+            $this->settings['options_global_source']);
+
+          if ( ! $data_source OR ! $data_source->is_populated())
+          {
+            throw new Exception('Invalid data source in ' .__METHOD__);
+          }
+
+          if ($data_source->type == Options_data_source::TYPE_FILE)
+          {
+            // Load the data from a file.
+            $options = $this->_ft_model->load_options_data_from_file(
+              $data_source->location);
+          }
+          elseif ($data_source->type == Options_data_source::TYPE_URL)
+          {
+            // Load the data from a URL.
+            $options = $this->_ft_model->load_options_data_from_url(
+              $data_source->location);
+          }
+          else
+          {
+            // Express our outrage.
+            throw new Exception('Invalid data source type in ' .__METHOD__);
+          }
+
+          break;
+
+        case 'manual':
+          $options = $this->_ft_model->load_options_data_from_string(
+            $this->settings['options_manual_source']);
+          break;
+
+        default:
+          throw new Exception('Invalid data source in ' .__METHOD__);
+          break;
+      }
+    }
+    catch (Exception $e)
+    {
+      // @TODO: Log the error.
+      return FALSE;
+    }
+
+    return $this->_find_option_by_value($data, $options);
   }
 
 
   /**
-   * Displays the fieldtype in a template.
+   * Displays the field value in a template.
    *
    * @access public
    * @param  string $data    The saved field data.
@@ -311,7 +369,32 @@ class Options_ft extends EE_Fieldtype {
    */
   public function replace_tag($data, Array $params = array(), $tagdata = '')
   {
+    if ( ! $data)
+    {
+      return '';
+    }
 
+    return $data['value'];
+  }
+
+
+  /**
+   * Displays the field 'value label' in a template.
+   *
+   * @access public
+   * @param  string $data    The saved field data.
+   * @param  array  $params  The tag parameters.
+   * @param  string $tagdata The tag data (for tag pairs).
+   * @return string The modified tagdata.
+   */
+  public function replace_label($data, Array $params = array(), $tagdata = '')
+  {
+    if ( ! $data)
+    {
+      return '';
+    }
+
+    return $data['label'];
   }
 
 
@@ -570,6 +653,37 @@ class Options_ft extends EE_Fieldtype {
     return $return;
   }
 
+
+  /**
+   * Retrieves an 'option', given the option value.
+   *
+   * @access  private
+   * @param   string  $search_val   The option value.
+   * @param   array   $options      An array of option to search.
+   * @return  array
+   */
+  private function _find_option_by_value($search_val = '', Array $options)
+  {
+    foreach ($options AS $option_val => $option_label)
+    {
+      if (is_array($option_label)
+        && ($sub = $this->_find_option_by_value($search_val, $option_label))
+      )
+      {
+        return $sub;
+      }
+
+      if ($option_val === $search_val)
+      {
+        return array(
+          'value' => $option_val,
+          'label' => $option_label
+        );
+      }
+    }
+
+    return FALSE;
+  }
 
 
 }
