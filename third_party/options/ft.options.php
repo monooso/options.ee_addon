@@ -176,7 +176,7 @@ class Options_ft extends EE_Fieldtype {
          */
 
         $data   = $data ? $data[0] : $data;
-        $output = form_dropdown($field_name, $options, $data[0]);
+        $output = form_dropdown($field_name, $options, $data);
         break;
     }
 
