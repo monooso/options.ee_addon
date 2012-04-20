@@ -9,7 +9,7 @@
  */
 
 $lang = array(
-  'options_fieldtype_name' => 'Options',
+  'options_fieldtype_name'        => 'Options',
   'options_fieldtype_description' => 'Better options.',
 
   'data_format_php_array' => 'PHP Array',
@@ -42,7 +42,7 @@ $lang = array(
   'options_control_type__select'        => 'Drop-down list',
 
   'thd_data_source_format'    => 'Data Format',
-  'thd_data_source_location'  => 'File Path or URL',
+  'thd_data_source_location'  => 'File Path or URL <span>File paths should be relative to <code>%1$s</code></span>',
   'thd_data_source_title'     => 'Title',
   'thd_data_source_type'      => 'Source Type',
 

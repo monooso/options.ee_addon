@@ -324,6 +324,14 @@ class Options_model extends CI_Model {
   {
     $message = 'Unable to load options data in ' .__CLASS__ .'::' .__METHOD__;
 
+    // Paths are relative to the "bootstrap" file (i.e. web root).
+    if ( ! $file = realpath(FCPATH .ltrim($file, '/'))
+      OR ! is_file($file)
+    )
+    {
+      throw new Exception($message);
+    }
+
     /**
      * In terms of the YAML library being used, this works in exactly the same
      * way as loading a string. This isn't as convenient as it sounds, because 
@@ -331,11 +339,6 @@ class Options_model extends CI_Model {
      * data source. Not desired behaviour at all, so we do a 'file exists' check 
      * before handing over processing.
      */
-
-    if ( ! is_file($file))
-    {
-      throw new Exception($message);
-    }
 
     try
     {

@@ -8,6 +8,17 @@
 
 @media screen {
 
+/* =th
+ * ------------------------------------------------------------ */
+#ei_options th span {
+  color       : rgba(255, 255, 255, 0.35);
+  display     : block;
+  font-size   : 0.9em;
+  font-weight : normal;
+  margin-top  : 0.5em;
+}
+
+
 /* =input
  * ------------------------------------------------------------ */
 #ei_options input[type='text'] {

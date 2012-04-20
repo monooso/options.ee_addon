@@ -6,7 +6,7 @@
       <th><?=lang('thd_data_source_title'); ?></th>
       <th><?=lang('thd_data_source_type'); ?></th>
       <!-- <th><?=lang('thd_data_source_format'); ?></th> -->
-      <th><?=lang('thd_data_source_location'); ?></th>
+      <th><?=sprintf(lang('thd_data_source_location'), FCPATH); ?></th>
       <th>&nbsp;</th>
     </tr>
   </thead>
